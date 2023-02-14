@@ -10,8 +10,8 @@ const run = () => {
   const versionCode = getInput(Input.VersionCode)
   const buildNumber = getInput(Input.BuildNumber)
 
-  if (iosPath) bumpIosValues({ iosPath, buildNumber, bumpType })
   if (androidPath) bumpAndroidValues({ androidPath, versionCode, bumpType })
+  if (iosPath) bumpIosValues({ iosPath, buildNumber, bumpType })
 }
 
 try {

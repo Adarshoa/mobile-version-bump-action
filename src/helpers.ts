@@ -1,5 +1,5 @@
 export const bumpedVersion = (version: string, bumpType: string) => {
-  const [major, minor, patch] = version.split(".")
+  const [major, minor, patch] = version.replace(new RegExp('"', 'g'), '').split(".")
 
   switch (bumpType) {
     case "major":
