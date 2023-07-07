@@ -9,9 +9,19 @@ const run = () => {
   const bumpType = getInput(Input.BumpType)
   const versionCode = getInput(Input.VersionCode)
   const buildNumber = getInput(Input.BuildNumber)
+  const appVersion = getInput(Input.AppVersion)
 
-  if (androidPath) bumpAndroidValues({ androidPath, versionCode, bumpType })
-  if (iosPath) bumpIosValues({ iosPath, buildNumber, bumpType })
+  if (androidPath) {
+    bumpAndroidValues({ version: appVersion, androidPath, versionCode, bumpType })
+  } else {
+    console.log("No android path provided. Skipping...")
+  }
+
+  if (iosPath) {
+    bumpIosValues({ version: appVersion, iosPath, buildNumber, bumpType })
+  } else {
+    console.log("No ios path provided. Skipping...")
+  }
 }
 
 try {

@@ -4,6 +4,7 @@ export enum Input {
   BumpType = "bump-type",
   VersionCode = "version-code",
   BuildNumber = "build-number",
+  AppVersion = "app-version",
 }
 
 
