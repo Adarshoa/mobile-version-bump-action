@@ -2,10 +2,9 @@
   "compileOnSave": false,
   "include": ["src/*"],
   "exclude": ["node_modules", "dist"],
-  "buildOptions": {
-    "incremental": true
-  },
   "compilerOptions": {
-    "moduleResolution": "node16"
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force"
   }
 }

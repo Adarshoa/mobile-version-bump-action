@@ -3,14 +3,19 @@ import { getExecOutput } from "@actions/exec";
 import { bumpedVersion } from "./helpers";
 import { Output } from "./types";
 
-async function bumpIosVersion(path: string, bumpType: string, version?: string) {
+async function bumpIosVersion(
+  path: string,
+  bumpType: string,
+  version?: string
+) {
   const options = { cwd: path };
   const { stdout: currentIosVersion } = await getExecOutput(
     "agvtool",
     ["what-marketing-version", "-terse1"],
     options
   );
-  const newVersion = version || bumpedVersion(currentIosVersion.toString().trim(), bumpType);
+  const newVersion =
+    version || bumpedVersion(currentIosVersion.toString().trim(), bumpType);
 
   if (newVersion) {
     const { stdout: iosVersion } = await getExecOutput(

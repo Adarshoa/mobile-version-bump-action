@@ -62,10 +62,9 @@ export function bumpAndroidValues({
       );
     }
     if (versionNameLineIndex > 0 || version) {
-      fileLines[versionNameLineIndex] = version || getVersionNameLine(
-        fileLines[versionNameLineIndex],
-        bumpType
-      );
+      fileLines[versionNameLineIndex] =
+        version ||
+        getVersionNameLine(fileLines[versionNameLineIndex], bumpType);
     }
 
     writeFile(gradlePath, fileLines.join("\n"), (error) => {

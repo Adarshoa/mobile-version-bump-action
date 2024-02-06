@@ -7,7 +7,6 @@ export enum Input {
   AppVersion = "app-version",
 }
 
-
 export enum Output {
   AndroidVersionCode = "android-version-code",
   AndroidVersion = "android-version",
