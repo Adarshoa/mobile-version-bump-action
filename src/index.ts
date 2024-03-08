@@ -23,7 +23,11 @@ const run = () => {
   }
 
   if (iosPath) {
-    bumpIosValues({ version: appVersion, iosPath, buildNumber, bumpType });
+    bumpIosValues({
+      version: appVersion,
+      iosPath,
+      buildNumber,
+      bumpType });
   } else {
     console.log("No ios path provided. Skipping...");
   }
