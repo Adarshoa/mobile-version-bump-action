@@ -23,7 +23,7 @@ async function bumpIosVersion(
       ["new-marketing-version", newVersion],
       options
     );
-    setOutput(Output.IosVersion, iosVersion.toString().split("\n")[1].trim().replace(/\.$/, ""));
+    setOutput(Output.IosVersion, newVersion);
   } else {
     console.log("No version found for path:", path);
   }
