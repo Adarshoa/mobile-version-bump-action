@@ -20,8 +20,7 @@ async function bumpIosVersion(
   if (newVersion) {
     const { stdout: iosVersion } = await getExecOutput(
       "agvtool",
-      ["new-marketing-version", newVersion],
-      options
+      ["new-marketing-version", newVersion]
     );
     setOutput(Output.IosVersion, newVersion);
   } else {
