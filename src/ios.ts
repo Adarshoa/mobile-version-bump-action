@@ -14,7 +14,6 @@ async function bumpIosVersion(
     ["what-marketing-version", "-terse1"],
     options
   );
-
   const newVersion =
     version || bumpedVersion(currentIosVersion.toString().trim(), bumpType);
 
@@ -24,24 +23,11 @@ async function bumpIosVersion(
       ["new-marketing-version", newVersion],
       options
     );
-
-    // Validate and clean the version output
-    const cleanVersion = iosVersion
-      .toString()
-      .split('\n')[0]
-      .trim()
-      .match(/^\d+\.\d+\.\d+$/)?.[0]; // Matches "x.y.z"
-
-    if (cleanVersion) {
-      setOutput(Output.IosVersion, cleanVersion);
-    } else {
-      console.error("Invalid iOS version format detected:", iosVersion);
-    }
+    setOutput(Output.IosVersion, iosVersion.toString().split('\n')[0].trim().replace(/a \.+$/, ''));
   } else {
-    console.error("No version found for path:", path);
+    console.log("No version found for path:", path);
   }
 }
-
 
 async function bumpBuildNumber(path: string, buildNumber?: string) {
   const params = buildNumber
