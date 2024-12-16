@@ -1,5 +1,4 @@
 import { bumpedVersion } from "./helpers";
-
 import { setOutput } from "@actions/core";
 import { readFile, writeFile } from "fs";
 import { Output } from "./types";
@@ -55,6 +54,7 @@ export function bumpAndroidValues({
       line.match(versionNameRegex)
     );
 
+    let newVersionName = version; // Initialize with provided version or leave undefined
     if (versionCodeLineIndex > 0) {
       fileLines[versionCodeLineIndex] = getVersionCodeLine(
         fileLines[versionCodeLineIndex],
@@ -62,13 +62,24 @@ export function bumpAndroidValues({
       );
     }
     if (versionNameLineIndex > 0 || version) {
-      fileLines[versionNameLineIndex] =
-        version ||
-        getVersionNameLine(fileLines[versionNameLineIndex], bumpType);
+      const computedVersionName = getVersionNameLine(
+        fileLines[versionNameLineIndex],
+        bumpType
+      );
+      newVersionName = newVersionName || computedVersionName.match(/"(.+)"/)?.[1];
+      fileLines[versionNameLineIndex] = newVersionName;
     }
 
     writeFile(gradlePath, fileLines.join("\n"), (error) => {
       if (error) throw error;
+
+      // Output the messages with the updated version
+      console.log(
+        `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Google Play`
+      );
+      console.log(
+        `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Browserstack`
+      );
     });
   });
 }
