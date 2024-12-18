@@ -140,6 +140,13 @@ export function bumpAndroidValues({
 
     let newVersionName: string | undefined;
 
+    // Debug logging
+    console.log('Version input:', version);
+    console.log('Bump type:', bumpType);
+    console.log('Version code line index:', versionCodeLineIndex);
+    console.log('Version name line index:', versionNameLineIndex);
+    console.log('Version name line:', fileLines[versionNameLineIndex]);
+
     if (versionCodeLineIndex > 0) {
       fileLines[versionCodeLineIndex] = getVersionCodeLine(
         fileLines[versionCodeLineIndex],
@@ -153,29 +160,39 @@ export function bumpAndroidValues({
         bumpType
       );
       
+      // Debug logging for version name extraction
+      console.log('Computed version name:', computedVersionName);
+
       // Extract version name, prioritizing the provided version
       newVersionName = version || 
         computedVersionName.match(/"(.+)"/)?.[1] || 
         computedVersionName;
 
+      // Ensure we're using the actual version name
+      const extractedVersion = newVersionName.match(/"?([^"]+)"?/)?.[1] || newVersionName;
+      
+      console.log('Extracted version name:', extractedVersion);
+
       // Update the version name line
       fileLines[versionNameLineIndex] = computedVersionName;
+
+      // Use the extracted version for logging and output
+      writeFile(gradlePath, fileLines.join("\n"), (error) => {
+        if (error) throw error;
+
+        if (extractedVersion) {
+          console.log(
+            `:large_green_circle: A new Android build version ${extractedVersion} has been uploaded to Google Play`
+          );
+          console.log(
+            `:large_green_circle: A new Android build version ${extractedVersion} has been uploaded to Browserstack`
+          );
+        } else {
+          console.error("Could not determine the new version name");
+        }
+      });
+    } else {
+      console.error("No version name line found and no version provided");
     }
-
-    writeFile(gradlePath, fileLines.join("\n"), (error) => {
-      if (error) throw error;
-
-      // Ensure newVersionName is defined before logging
-      if (newVersionName) {
-        console.log(
-          `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Google Play`
-        );
-        console.log(
-          `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Browserstack`
-        );
-      } else {
-        console.error("Could not determine the new version name");
-      }
-    });
   });
 }
