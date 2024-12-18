@@ -107,14 +107,16 @@ const getVersionCodeLine = (
   return `${versionCodeLineArray.join(" ")} ${nextVersionCode}`;
 };
 
-const getVersionNameLine = (versionNameLine: string, bumpType: string) => {
-  const versionNameLineArray = versionNameLine.split(" ");
-  const currentVersionName = versionNameLineArray
-    .pop()
-    .replace(new RegExp('"', "g"), "");
-  const nextVersionName = bumpedVersion(currentVersionName, bumpType);
-  setOutput(Output.AndroidVersion, nextVersionName);
-  return `${versionNameLineArray.join(" ")} "${nextVersionName}"`;
+const extractVersionName = (versionNameLine: string, bumpType: string, providedVersion?: string) => {
+  // First, try the provided version
+  if (providedVersion) return providedVersion;
+
+  // Extract version from the line
+  const versionMatch = versionNameLine.match(/"([^"]+)"/);
+  const currentVersionName = versionMatch ? versionMatch[1] : '';
+  
+  // Bump the version
+  return bumpedVersion(currentVersionName, bumpType);
 };
 
 export function bumpAndroidValues({
@@ -138,15 +140,17 @@ export function bumpAndroidValues({
       line.match(versionNameRegex)
     );
 
-    let newVersionName: string | undefined;
+    // Extract or compute the version name
+    const newVersionName = extractVersionName(
+      fileLines[versionNameLineIndex], 
+      bumpType, 
+      version
+    );
 
-    // Debug logging
-    console.log('Version input:', version);
-    console.log('Bump type:', bumpType);
-    console.log('Version code line index:', versionCodeLineIndex);
-    console.log('Version name line index:', versionNameLineIndex);
-    console.log('Version name line:', fileLines[versionNameLineIndex]);
+    // Set the output explicitly
+    setOutput(Output.AndroidVersion, newVersionName);
 
+    // Update version code if applicable
     if (versionCodeLineIndex > 0) {
       fileLines[versionCodeLineIndex] = getVersionCodeLine(
         fileLines[versionCodeLineIndex],
@@ -154,45 +158,26 @@ export function bumpAndroidValues({
       );
     }
 
-    if (versionNameLineIndex > 0 || version) {
-      const computedVersionName = getVersionNameLine(
-        fileLines[versionNameLineIndex],
-        bumpType
+    // Update version name line
+    if (versionNameLineIndex > 0) {
+      const updatedVersionNameLine = fileLines[versionNameLineIndex].replace(
+        /"[^"]*"/,
+        `"${newVersionName}"`
       );
-      
-      // Debug logging for version name extraction
-      console.log('Computed version name:', computedVersionName);
-
-      // Extract version name, prioritizing the provided version
-      newVersionName = version || 
-        computedVersionName.match(/"(.+)"/)?.[1] || 
-        computedVersionName;
-
-      // Ensure we're using the actual version name
-      const extractedVersion = newVersionName.match(/"?([^"]+)"?/)?.[1] || newVersionName;
-      
-      console.log('Extracted version name:', extractedVersion);
-
-      // Update the version name line
-      fileLines[versionNameLineIndex] = computedVersionName;
-
-      // Use the extracted version for logging and output
-      writeFile(gradlePath, fileLines.join("\n"), (error) => {
-        if (error) throw error;
-
-        if (extractedVersion) {
-          console.log(
-            `:large_green_circle: A new Android build version ${extractedVersion} has been uploaded to Google Play`
-          );
-          console.log(
-            `:large_green_circle: A new Android build version ${extractedVersion} has been uploaded to Browserstack`
-          );
-        } else {
-          console.error("Could not determine the new version name");
-        }
-      });
-    } else {
-      console.error("No version name line found and no version provided");
+      fileLines[versionNameLineIndex] = updatedVersionNameLine;
     }
+
+    // Write updated file
+    writeFile(gradlePath, fileLines.join("\n"), (error) => {
+      if (error) throw error;
+
+      // Log the version
+      console.log(
+        `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Google Play`
+      );
+      console.log(
+        `:large_green_circle: A new Android build version ${newVersionName} has been uploaded to Browserstack`
+      );
+    });
   });
 }
