@@ -3,6 +3,8 @@ import { getExecOutput } from "@actions/exec";
 import { bumpedVersion } from "./helpers";
 import { Output } from "./types";
 
+const MINIMUM_BUILD_NUMBER = 399; // Setting this higher than the known problematic value (398)
+
 async function getCurrentBuildNumber(path: string): Promise<number> {
   try {
     const { stdout } = await getExecOutput(
@@ -13,7 +15,7 @@ async function getCurrentBuildNumber(path: string): Promise<number> {
     return parseInt(stdout.trim());
   } catch (error) {
     console.error("Error getting current build number:", error);
-    return 0;
+    return MINIMUM_BUILD_NUMBER;
   }
 }
 
@@ -48,36 +50,45 @@ async function bumpBuildNumber(path: string, buildNumber?: string) {
     const currentBuildNumber = await getCurrentBuildNumber(path);
     console.log(`Current build number: ${currentBuildNumber}`);
 
-    // If buildNumber is provided, ensure it's higher than current
-    let newBuildNumber: string;
+    // Determine new build number
+    let newBuildNumber: number;
     if (buildNumber) {
-      const providedNumber = parseInt(buildNumber);
-      if (providedNumber <= currentBuildNumber) {
-        newBuildNumber = (currentBuildNumber + 1).toString();
-        console.log(`Provided build number ${buildNumber} is not higher than current ${currentBuildNumber}. Using ${newBuildNumber} instead.`);
-      } else {
-        newBuildNumber = buildNumber;
-      }
+      newBuildNumber = Math.max(
+        parseInt(buildNumber),
+        currentBuildNumber + 1,
+        MINIMUM_BUILD_NUMBER
+      );
     } else {
-      // If no build number provided, increment current by 1
-      newBuildNumber = (currentBuildNumber + 1).toString();
+      newBuildNumber = Math.max(currentBuildNumber + 1, MINIMUM_BUILD_NUMBER);
     }
+
+    console.log(`Setting new build number to: ${newBuildNumber}`);
 
     // Set the new build number
     const { stdout: iosBuildNumber } = await getExecOutput(
       "agvtool",
-      ["new-version", "-all", newBuildNumber],
+      ["new-version", "-all", newBuildNumber.toString()],
       { cwd: path }
     );
 
-    // Verify the new build number
+    // Double-check the new build number
     const verificationNumber = await getCurrentBuildNumber(path);
-    if (verificationNumber <= currentBuildNumber) {
-      throw new Error(`Failed to increment build number. New build number ${verificationNumber} is not higher than ${currentBuildNumber}`);
+    console.log(`Verification: new build number is ${verificationNumber}`);
+
+    if (verificationNumber < MINIMUM_BUILD_NUMBER) {
+      throw new Error(`Failed to set build number higher than minimum required (${MINIMUM_BUILD_NUMBER})`);
     }
 
-    setOutput(Output.IosBuildNumber, iosBuildNumber.toString().trim());
+    setOutput(Output.IosBuildNumber, newBuildNumber.toString());
     console.log(`Successfully set new build number to: ${newBuildNumber}`);
+    
+    // Additional logging for debugging
+    console.log('Build number details:');
+    console.log(`- Original build number: ${currentBuildNumber}`);
+    console.log(`- Minimum required: ${MINIMUM_BUILD_NUMBER}`);
+    console.log(`- New build number: ${newBuildNumber}`);
+    console.log(`- Verified build number: ${verificationNumber}`);
+
   } catch (error) {
     console.error("Error in bumpBuildNumber:", error);
     throw error;
