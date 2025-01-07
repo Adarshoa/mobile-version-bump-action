@@ -3,7 +3,7 @@ import { getExecOutput } from "@actions/exec";
 import { bumpedVersion } from "./helpers";
 import { Output } from "./types";
 
-const MINIMUM_BUILD_NUMBER = 399; // Setting this higher than the known problematic value (398)
+const MINIMUM_BUILD_NUMBER = 402; // Setting this higher than the known problematic value (398)
 
 async function getCurrentBuildNumber(path: string): Promise<number> {
   try {
